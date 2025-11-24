@@ -1,0 +1,15 @@
+<RCC>
+    <qresource prefix="/pic">
+        <file>images/icons/bot_icon2.png</file>
+        <file>images/icons/bot_icon3.png</file>
+        <file>images/icons/user_icon_male.png</file>
+        <file>images/checkers/black_checker.png</file>
+        <file>images/checkers/black_king.png</file>
+        <file>images/checkers/black_king1.png</file>
+        <file>images/checkers/white_checker.png</file>
+        <file>images/checkers/white_king.png</file>
+        <file>images/icons/user_icon_female.png</file>
+        <file>images/icons/bot_icon4.png</file>
+        <file>images/icons/bot_icon1.png</file>
+    </qresource>
+</RCC>

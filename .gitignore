@@ -1,0 +1,16 @@
+*.pro.user
+*.autosave
+*.user
+*.opendb
+CMakeLists.txt
+
+images/
+build*/
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.dylib
+
+*.log
