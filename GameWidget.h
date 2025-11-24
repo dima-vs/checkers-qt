@@ -50,10 +50,14 @@ protected:
 signals:
 private slots:
     void onBoardResize(int xOffset, int yOffset, int boardSide);
+    void onGameSettingsClicked();
+    void onCancelGameSettingsClicked();
+    void onSaveGameSettingsClicked();
 private:
     QHash<IconBackgroundColors, QColor> m_iconBackgroundColors;
     GameSettings m_gameSettings;
 
+    // === Board panel ===
     BoardWidget* m_boardWidget;
     QWidget* m_buttonsStack;
     QPushButton* m_playBtn;
@@ -72,11 +76,21 @@ private:
     QWidget* m_topPlayerInfoPanel;
     QWidget* m_bottomPlayerInfoPanel;
 
+    QLabel* m_topPlayerIcon;
+    QLabel* m_bottomPlayerIcon;
+    // === Board panel ===
+
     QStackedWidget* m_centralContent;
     QWidget* m_boardWidgetContainer;
     QWidget* m_gameSettingsContainer;
 
     QWidget* m_gameSettingsPanel;
+
+    QRadioButton* m_whiteColorOption;
+    QRadioButton* m_blackColorOption;
+    QSlider* m_chooseDiffLevel;
+    QPushButton* m_saveGameSettingsBtn;
+    QPushButton* m_cancelGameSettingsBtn;
 
     const QPixmap m_blackChecker;
     const QPixmap m_whiteChecker;
@@ -97,7 +111,11 @@ private:
     QPixmap m_botIconHard1Resized;
     QPixmap m_botIconHard2Resized;
 
+    QString getDefaultIconStyle();
     void initIconBackgroundColors();
+    void updateGameSettingsPanel();
+    void saveGameSettings();
+    void updateBotIcon();
 
     void initView();
     void initCentralPanel(QStackedWidget *centralContent);

@@ -25,6 +25,27 @@ GameWidget::GameWidget(QWidget *parent)
         this,
         &GameWidget::onBoardResize
         );
+
+    connect(
+        m_gameSettingsBtn,
+        &QPushButton::clicked,
+        this,
+        &GameWidget::onGameSettingsClicked
+        );
+
+    connect(
+        m_cancelGameSettingsBtn,
+        &QPushButton::clicked,
+        this,
+        &GameWidget::onCancelGameSettingsClicked
+        );
+
+    connect(
+        m_saveGameSettingsBtn,
+        &QPushButton::clicked,
+        this,
+        &GameWidget::onSaveGameSettingsClicked
+        );
 }
 
 void GameWidget::initIconBackgroundColors()
@@ -132,36 +153,40 @@ void GameWidget::initBoardPanel(QWidget* boardWidgetContainer)
     m_bottomPlayerInfoContainer->addItem(m_bottomRightPlayerSpace);
 
     // верхня інформація (противник)
-    QLabel* topPlayerIcon = new QLabel();
-    m_userMaleIconResized = m_userFemaleIcon.scaled(
-        32, 32, Qt::KeepAspectRatio,
-        Qt::SmoothTransformation
-        );
-    topPlayerIcon->setPixmap(m_userMaleIconResized);
+    m_topPlayerIcon = new QLabel();
     QLabel* topPlayerLabel = new QLabel("Противник");
 
     // нижня інформація (гравець)
-    QWidget* bottomPlayerIcon = new QWidget();
+    m_bottomPlayerIcon = new QLabel();
     QLabel* bottomPlayerLabel = new QLabel("Ви");
+
+    m_userMaleIconResized = m_userMaleIcon.scaled(
+        32, 32, Qt::KeepAspectRatio,
+        Qt::SmoothTransformation
+        );
+    m_bottomPlayerIcon->setPixmap(m_userMaleIconResized);
 
     QString iconStyle =
         "background-color: #c0c0c0;"
         "border-radius: 6px;";
 
-    topPlayerIcon->setFixedSize(32, 32);
-    topPlayerIcon->setStyleSheet(iconStyle);
+    m_topPlayerIcon->setFixedSize(32, 32);
+    m_topPlayerIcon->setStyleSheet(iconStyle);
 
-    bottomPlayerIcon->setFixedSize(32, 32);
-    bottomPlayerIcon->setStyleSheet(iconStyle);
+    m_bottomPlayerIcon->setFixedSize(32, 32);
+    m_bottomPlayerIcon->setStyleSheet(iconStyle);
+
+    updateBotIcon();
+    // updatePlayerIcon();
 
     // противник (зверху)
-    topPlayerInfo->addWidget(topPlayerIcon);
+    topPlayerInfo->addWidget(m_topPlayerIcon);
     topPlayerInfo->addSpacing(6);
     topPlayerInfo->addWidget(topPlayerLabel);
     topPlayerInfo->addStretch();
 
     // гравець (знизу)
-    bottomPlayerInfo->addWidget(bottomPlayerIcon);
+    bottomPlayerInfo->addWidget(m_bottomPlayerIcon);
     bottomPlayerInfo->addSpacing(6);
     bottomPlayerInfo->addWidget(bottomPlayerLabel);
     bottomPlayerInfo->addStretch();
@@ -245,32 +270,27 @@ void GameWidget::initGameSettingsPanel(QWidget* gameSettingsContainer)
     blackCheckerImgLb->setPixmap(blackScaled);
     QLabel* blackCheckerTextLb = new QLabel("Чорні");
 
-    QRadioButton* whiteOp = new QRadioButton();
-    QRadioButton* blackOp = new QRadioButton();
+    m_whiteColorOption = new QRadioButton();
+    m_blackColorOption = new QRadioButton();
 
     QButtonGroup* checkerColorGroup = new QButtonGroup(gameSettingsPanel);
-    checkerColorGroup->addButton(whiteOp);
-    checkerColorGroup->addButton(blackOp);
+    checkerColorGroup->addButton(m_whiteColorOption);
+    checkerColorGroup->addButton(m_blackColorOption);
 
     selectCheckerColorLayout->addStretch(4);
-    selectCheckerColorLayout->addWidget(whiteOp);
+    selectCheckerColorLayout->addWidget(m_whiteColorOption);
     selectCheckerColorLayout->addSpacing(4);
     selectCheckerColorLayout->addWidget(whiteCheckerImgLb);
     selectCheckerColorLayout->addSpacing(4);
     selectCheckerColorLayout->addWidget(whiteCheckerTextLb);
     selectCheckerColorLayout->addStretch(1);
 
-    selectCheckerColorLayout->addWidget(blackOp);
+    selectCheckerColorLayout->addWidget(m_blackColorOption);
     selectCheckerColorLayout->addSpacing(4);
     selectCheckerColorLayout->addWidget(blackCheckerImgLb);
     selectCheckerColorLayout->addSpacing(4);
     selectCheckerColorLayout->addWidget(blackCheckerTextLb);
     selectCheckerColorLayout->addStretch(4);
-
-    if (m_gameSettings.playerColor == Position::WHITE)
-        whiteOp->setChecked(true);
-    else
-        blackOp->setChecked(true);
 
     // === Вибір рівня складності ===
     QHBoxLayout* selectDiffLevelLayout = new QHBoxLayout();
@@ -348,32 +368,33 @@ void GameWidget::initGameSettingsPanel(QWidget* gameSettingsContainer)
     QString easyBotIconLbStyle = "background-color: " +
         m_iconBackgroundColors[LIGHT_BLUE].name() + ";";
     QString hardBotIconLbStyle = "background-color: " +
-            m_iconBackgroundColors[LIGHT_RED].name() + ";";
+            m_iconBackgroundColors[LIGHT_YELLOW].name() + ";";
 
     botIconEasyLb->setStyleSheet(botIconLbStyle + easyBotIconLbStyle);
     botIconHardLb->setStyleSheet(botIconLbStyle + hardBotIconLbStyle);
 
-    QSlider* chooseDiffLevel = new QSlider(Qt::Horizontal);
-    chooseDiffLevel->setMinimum(1);
-    chooseDiffLevel->setMaximum(10);
-    chooseDiffLevel->setSliderPosition(1);
-    chooseDiffLevel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+    m_chooseDiffLevel = new QSlider(Qt::Horizontal);
+    m_chooseDiffLevel->setMinimum(1);
+    m_chooseDiffLevel->setMaximum(10);
+    m_chooseDiffLevel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
 
     selectDiffLevelLayout->addStretch(4);
     selectDiffLevelLayout->addWidget(botIconEasyContainer);
-    selectDiffLevelLayout->addWidget(chooseDiffLevel, 10);
+    selectDiffLevelLayout->addWidget(m_chooseDiffLevel, 10);
     selectDiffLevelLayout->addWidget(botIconHardContainer);
     selectDiffLevelLayout->addStretch(4);
 
+    updateGameSettingsPanel();
+
     // === Кнопки збереження та скасування ===
     QHBoxLayout* buttonsLayout = new QHBoxLayout();
-    QPushButton* saveBtn = new QPushButton("Зберегти");
-    QPushButton* cancelBtn = new QPushButton("Скасувати");
+    m_saveGameSettingsBtn = new QPushButton("Зберегти");
+    m_cancelGameSettingsBtn = new QPushButton("Скасувати");
 
     buttonsLayout->addStretch(1);
-    buttonsLayout->addWidget(saveBtn, 8);
+    buttonsLayout->addWidget(m_saveGameSettingsBtn, 8);
     buttonsLayout->addStretch(1);
-    buttonsLayout->addWidget(cancelBtn, 8);
+    buttonsLayout->addWidget(m_cancelGameSettingsBtn, 8);
     buttonsLayout->addStretch(1);
 
     // === Додавання елементів в головний макет ===
@@ -403,6 +424,11 @@ void GameWidget::initGameSettingsPanel(QWidget* gameSettingsContainer)
     gameSettingsContainer->setLayout(horLayout);
 }
 
+QString GameWidget::getDefaultIconStyle()
+{
+    return "border-radius: 6px;";
+}
+
 void GameWidget::onBoardResize(int xOffset, int yOffset, int boardSide)
 {
     m_topLeftPlayerSpace->changeSize(xOffset, 0);
@@ -412,4 +438,94 @@ void GameWidget::onBoardResize(int xOffset, int yOffset, int boardSide)
 
     m_topPlayerInfoContainer->update();
     m_bottomPlayerInfoContainer->update();
+}
+
+void GameWidget::updateGameSettingsPanel()
+{
+    if (m_gameSettings.playerColor == Position::WHITE)
+        m_whiteColorOption->setChecked(true);
+    else
+        m_blackColorOption->setChecked(true);
+
+    m_chooseDiffLevel->setSliderPosition(m_gameSettings.difficultyLevel);
+}
+
+void GameWidget::onCancelGameSettingsClicked()
+{
+    m_centralContent->setCurrentWidget(m_boardWidgetContainer);
+}
+
+void GameWidget::onSaveGameSettingsClicked()
+{
+    saveGameSettings();
+    updateBotIcon();
+
+    m_centralContent->setCurrentWidget(m_boardWidgetContainer);
+}
+
+void GameWidget::updateBotIcon()
+{
+    QColor backgroundColor = QColor("#c0c0c0");
+    if (m_gameSettings.difficultyLevel >= 1 &&
+        m_gameSettings.difficultyLevel <= 3)
+    {
+        m_botIconEasyResized = m_botIconEasy.scaled(
+            32, 32, Qt::KeepAspectRatio,
+            Qt::SmoothTransformation
+            );
+        m_topPlayerIcon->setPixmap(m_botIconEasyResized);
+        backgroundColor = m_iconBackgroundColors[LIGHT_BLUE];
+    }
+    else if (m_gameSettings.difficultyLevel >= 4 &&
+        m_gameSettings.difficultyLevel <= 6)
+    {
+        m_botIconMediumResized = m_botIconMedium.scaled(
+            32, 32, Qt::KeepAspectRatio,
+            Qt::SmoothTransformation
+            );
+        m_topPlayerIcon->setPixmap(m_botIconMediumResized);
+        backgroundColor = m_iconBackgroundColors[LIGHT_GREEN];
+    }
+    else if (m_gameSettings.difficultyLevel >= 7 &&
+             m_gameSettings.difficultyLevel <= 9)
+    {
+        m_botIconHard1Resized = m_botIconHard1.scaled(
+            32, 32, Qt::KeepAspectRatio,
+            Qt::SmoothTransformation
+            );
+        m_topPlayerIcon->setPixmap(m_botIconHard1Resized);
+        backgroundColor = m_iconBackgroundColors[LIGHT_YELLOW];
+    }
+    else if (m_gameSettings.difficultyLevel >= 10 &&
+             m_gameSettings.difficultyLevel <= 10)
+    {
+        m_botIconHard2Resized = m_botIconHard2.scaled(
+            32, 32, Qt::KeepAspectRatio,
+            Qt::SmoothTransformation
+            );
+        m_topPlayerIcon->setPixmap(m_botIconHard2Resized);
+        backgroundColor = m_iconBackgroundColors[LIGHT_ORANGE];
+    }
+
+    m_topPlayerIcon->setStyleSheet(
+        "background-color: " +
+            backgroundColor.name() + ";" +
+        getDefaultIconStyle()
+        );
+}
+
+void GameWidget::saveGameSettings()
+{
+    if (m_whiteColorOption->isChecked())
+        m_gameSettings.playerColor = Position::WHITE;
+    else
+        m_gameSettings.playerColor = Position::BLACK;
+
+    m_gameSettings.difficultyLevel = m_chooseDiffLevel->sliderPosition();
+}
+
+void GameWidget::onGameSettingsClicked()
+{
+    updateGameSettingsPanel();
+    m_centralContent->setCurrentWidget(m_gameSettingsContainer);
 }
